@@ -10,6 +10,7 @@ from .stat.asn_neighbours import ASNNeighbours
 from .stat.looking_glass import LookingGlass
 from .stat.network_info import NetworkInfo
 from .stat.ris_peers import RISPeers
+from prsw.stat.routing_status import RoutingStatus
 from .stat.rpki_validation_status import RPKIValidationStatus
 from .stat.whats_my_ip import WhatsMyIp
 
@@ -111,6 +112,11 @@ class RIPEstat:
     def ris_peers(self) -> Type[RISPeers]:
         """Lazy alias to :class:`.stat.RISPeers`."""
         return partial(RISPeers, self)
+
+    @property
+    def routing_status(self) -> Type[RoutingStatus]:
+        """Lazy alias to :class:`.stat.RoutingStatus`."""
+        return partial(RoutingStatus, self)
 
     @property
     def rpki_validation_status(self) -> Type[RPKIValidationStatus]:
