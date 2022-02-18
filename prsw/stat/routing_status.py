@@ -131,3 +131,13 @@ class RoutingStatus:
         Last_seen = namedtuple("Last_seen", ["time", "origin", "prefix"])
         
         return Last_seen(**self._api.data["last_seen"])
+    
+    @property
+    def observed_neighbours(self):
+
+        return self._api.data["observed_neighbours"]
+
+    @property
+    def query_time(self):
+
+        return self._api.data["query_time"]
