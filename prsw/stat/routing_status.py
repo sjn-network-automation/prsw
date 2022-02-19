@@ -3,6 +3,8 @@
 import ipaddress
 
 from collections import namedtuple
+from datetime import datetime
+from typing import NamedTuple
 
 from prsw.validators import Validators
 
@@ -107,8 +109,14 @@ class RoutingStatus:
         if RoutingStatus.resource_type == "asn":
 
             Versions = namedtuple("Versions", ["v4", "v6"])
-            V4totals = namedtuple("V4totals", ["ips", "prefixes"])
-            V6totals = namedtuple("V6totals", ["amount_of_48s", "prefixes"])
+            
+            class V4totals(NamedTuple):
+                ips: int
+                prefixes: int
+
+            class V6totals(NamedTuple):
+                amount_of_48s: int
+                prefixes: int
 
             v4 = V4totals(**self._api.data["announced_space"]["v4"])
 
@@ -120,24 +128,90 @@ class RoutingStatus:
 
     @property
     def first_seen(self):
-
+        # todo handle types 
         First_seen = namedtuple("First_seen", ["time", "origin", "prefix"])
         
         return First_seen(**self._api.data["first_seen"])
 
     @property
     def last_seen(self):
-
+        # todo handle types 
         Last_seen = namedtuple("Last_seen", ["time", "origin", "prefix"])
         
         return Last_seen(**self._api.data["last_seen"])
+
+    @property
+    def less_specifics(self):
+        if RoutingStatus.resource_type == "prefix":
+            prefixes = []
+
+            class Less_specifics(NamedTuple):
+                prefix: str ## for now, maybe you can check type for any vx address?
+                origin: int
+            
+            for less_specific in self._api.data["less_specifics"]:
+                print(less_specific)
+
+            
+            return "return"
+
+    @property
+    def more_specifics(self):
+        if RoutingStatus.resource_type == "prefix":
+            more_specifics = []
+            #ccase fix
+            MoreSpecific = namedtuple("MoreSpecific", ["prefix", "origin"])
+           
+            for specific in self._api.data["more_specifics"]:
+                prefix = ipaddress.ip_network(specific["prefix"], strict=False)
+                origin = int(specific["origin"])
+                
+                tuple_data = {"prefix": prefix, "origin":origin}
+                more_specifics.append(MoreSpecific(**tuple_data))
+            
+        return more_specifics
     
     @property
     def observed_neighbours(self):
-
-        return self._api.data["observed_neighbours"]
+        """Amount of unique ASes to be BGP neighbours at this point in time."""
+        return int(self._api.data["observed_neighbours"])
 
     @property
     def query_time(self):
+        """The **datetime** of the query."""
+        return datetime.fromisoformat(self._api.data["query_time"])
 
-        return self._api.data["query_time"]
+    @property
+    def resource(self):
+        """The resource, autonomous system number, used for the query."""
+        return int(self._api.data["resource"])
+
+    @property
+    def visibility(self):
+        """
+        NEED TO UPDATE THIS SAM
+        This contains information that are related to special purpose Internet number
+        resources, e.g. private address space.
+
+        .. code-block:: python
+
+            contacts = ripe.abuse_contact_finder('192.0.0.0')
+
+            contacts.global_network_info
+            # GlobalNetworkInfo(description="", name="RIPE NCC PI Allocation")
+
+            contacts.global_network_info.name
+            # "RIPE NCC PI Allocation"
+
+        """
+
+        Visibility = namedtuple("Visibility", ["v4", "v6"])
+
+        class RIStable(NamedTuple):
+            ris_peers_seeing: int
+            total_ris_peers: int
+        
+        v4 = RIStable(**self._api.data["visibility"]["v4"])
+        v6 = RIStable(**self._api.data["visibility"]["v6"])
+
+        return Visibility(v4, v6)
